@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZamCan Rescue</string>
+    <string name="tab_overview">Overview</string>
+    <string name="tab_device">This device</string>
+    <string name="tab_security">Security</string>
+    <string name="overview_title">Rescue, with consent.</string>
+    <string name="overview_subtitle">A local-first foundation for safe phone-to-phone assistance.</string>
+    <string name="status_title">Development milestone</string>
+    <string name="status_body">The authenticated protocol foundation is being developed. Live phone-to-phone transport and backup restore are not available yet.</string>
+    <string name="foundation_label">ZAMCAN RESCUE · FOUNDATION BUILD</string>
+    <string name="not_available_title">Not available in this build</string>
+    <string name="not_available_body">No rescue session, backup, restore, screen sharing, remote unlock, or file access is active. This app requests no network, Bluetooth, camera, storage, or accessibility permissions.</string>
+    <string name="device_title">Device diagnostics</string>
+    <string name="device_note">These values come from Android system build properties. They are identifying strings, not a complete hardware-health assessment.</string>
+    <string name="manufacturer">Manufacturer</string>
+    <string name="model">Model</string>
+    <string name="android_version">Android version</string>
+    <string name="api_level">API level</string>
+    <string name="application_id">Application ID</string>
+    <string name="security_title">Security boundaries</string>
+    <string name="security_body">Rescue access must be explicitly enrolled, limited to a specific operation, authenticated, time-bounded, and revocable. A previously paired device does not receive unrestricted access.</string>
+    <string name="protocol_status_title">Protocol module</string>
+    <string name="protocol_status_body">A standalone Kotlin module defines mutual peer authentication, ephemeral ECDH key agreement, HKDF-SHA-256 key derivation, and AES-GCM records with sequence-based replay rejection. It is not yet wired to an Android transport or backup flow.</string>
+    <string name="no_bypass_title">No lock-screen bypass</string>
+    <string name="no_bypass_body">The app does not bypass Android authentication, extract protected keys, exploit debugging, install silently, capture screens silently, or claim remote unlocking.</string>
+    <string name="brand_mark_description">ZamCan Rescue mark</string>
+</resources>

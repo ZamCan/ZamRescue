@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZamCan Rescue</string>
+    <string name="tab_overview">Muhtasari</string>
+    <string name="tab_device">Kifaa hiki</string>
+    <string name="tab_security">Usalama</string>
+    <string name="overview_title">Uokoaji kwa ridhaa.</string>
+    <string name="overview_subtitle">Msingi wa usaidizi salama wa simu kwa simu unaofanya kazi ndani ya mtandao wa karibu.</string>
+    <string name="status_title">Hatua ya maendeleo</string>
+    <string name="status_body">Msingi wa itifaki ya uthibitishaji unaandaliwa. Mawasiliano ya moja kwa moja kati ya simu na kurejesha nakala rudufu bado havipatikani.</string>
+    <string name="foundation_label">ZAMCAN RESCUE · TOLEO LA MSINGI</string>
+    <string name="not_available_title">Haipatikani katika toleo hili</string>
+    <string name="not_available_body">Hakuna kipindi cha uokoaji, nakala rudufu, urejeshaji, kushiriki skrini, kufungua kwa mbali, au ufikiaji wa faili unaotumika. Programu hii haiombi ruhusa za mtandao, Bluetooth, kamera, hifadhi, au ufikivu.</string>
+    <string name="device_title">Taarifa za kifaa</string>
+    <string name="device_note">Thamani hizi zinasomwa kutoka kwa taarifa za mfumo wa Android. Ni majina ya utambuzi, si tathmini kamili ya afya ya maunzi.</string>
+    <string name="manufacturer">Mtengenezaji</string>
+    <string name="model">Muundo</string>
+    <string name="android_version">Toleo la Android</string>
+    <string name="api_level">Kiwango cha API</string>
+    <string name="application_id">Kitambulisho cha programu</string>
+    <string name="security_title">Mipaka ya usalama</string>
+    <string name="security_body">Ufikiaji wa uokoaji lazima uidhinishwe waziwazi, uwekewe kikomo kwa operesheni maalum, uthibitishwe, uwe na muda maalum, na uweze kubatilishwa. Kifaa kilichowahi kuoanishwa hakipewi ufikiaji usio na kikomo.</string>
+    <string name="protocol_status_title">Moduli ya itifaki</string>
+    <string name="protocol_status_body">Moduli huru ya Kotlin inaeleza uthibitishaji wa pande zote, makubaliano ya funguo ya muda ya ECDH, utoaji wa funguo kwa HKDF-SHA-256, na rekodi za AES-GCM zenye kukataa marudio kwa kutumia namba za mfuatano. Bado haijaunganishwa na usafirishaji wa Android au utiririshaji wa nakala rudufu.</string>
+    <string name="no_bypass_title">Hakuna kupita kufuli la skrini</string>
+    <string name="no_bypass_body">Programu haipiti uthibitishaji wa Android, haichukui funguo zilizolindwa, haitumii vibaya utatuzi, haisakinishi kimyakimya, hainakili skrini kimyakimya, na haidai kufungua kifaa kwa mbali.</string>
+    <string name="brand_mark_description">Alama ya ZamCan Rescue</string>
+</resources>
