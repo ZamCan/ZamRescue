@@ -1,5 +1,7 @@
 package org.zamcan.zamrescue
 
+import org.zamcan.zamrescue.transport.LivePeerSession
+import androidx.compose.material3.OutlinedButton
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -67,6 +69,12 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
 
+    val liveSession = remember(context) { LivePeerSession(context) }
+    var probeHost by remember { mutableStateOf("") }
+    var probePort by remember { mutableStateOf("42761") }
+    var selectedPeer by remember { mutableStateOf("") }
+    var probeBusy by remember { mutableStateOf(false) }
+    var probeStatus by remember { mutableStateOf("No active peer session") }
     var identity by remember { mutableStateOf<DeviceIdentity?>(null) }
     var identityState by remember { mutableStateOf(IdentityUiState.LOADING) }
     var peerRecords by remember { mutableStateOf<List<TrustedPeerRecord>>(emptyList()) }
@@ -130,6 +138,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(lifecycleObserver)
             discovery.close()
+            liveSession.close()
         }
     }
 
@@ -279,6 +288,64 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                     Text(stringResource(R.string.peer_enroll_button))
                 }
             }
+        }
+
+        SectionCard(title = "Live peer verification") {
+            Text("On both phones, enroll and verify the other's public key first. Keep the receiver screen open and connect over the same reachable network. This tests encrypted identity authentication only.")
+            OutlinedTextField(
+                value = probeHost,
+                onValueChange = { probeHost = it.take(253) },
+                label = { Text("Receiver IP address") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = probePort,
+                onValueChange = { probePort = it.filter(Char::isDigit).take(5) },
+                label = { Text("TCP port") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            peerRecords.filterNot { it.isRevoked }.forEach { peer ->
+                OutlinedButton(onClick = { selectedPeer = peer.fingerprintHex }) {
+                    Text((if (selectedPeer == peer.fingerprintHex) "✓ " else "") + peer.displayName)
+                }
+            }
+            Button(
+                enabled = !probeBusy && identity != null && peerRecords.any { !it.isRevoked },
+                onClick = {
+                    probeBusy = true
+                    probeStatus = "Listening for one authenticated peer (up to 60 seconds)…"
+                    scope.launch {
+                        try {
+                            probeStatus = withContext(Dispatchers.IO) {
+                                liveSession.receiveProbe(probePort.toIntOrNull() ?: 42761)
+                            }
+                        } catch (e: Exception) {
+                            probeStatus = "Listening ended: " + (e.message ?: "connection failed")
+                        } finally { probeBusy = false }
+                    }
+                },
+            ) { Text("Listen for peer") }
+            Button(
+                enabled = !probeBusy && identity != null && selectedPeer.isNotBlank() && probeHost.isNotBlank(),
+                onClick = {
+                    probeBusy = true
+                    scope.launch {
+                        try {
+                            probeStatus = withContext(Dispatchers.IO) {
+                                liveSession.sendProbe(probeHost.trim(), probePort.toIntOrNull() ?: 42761, selectedPeer)
+                            }
+                        } catch (e: Exception) {
+                            probeStatus = "Connection failed: " + (e.message ?: "authentication rejected")
+                        } finally { probeBusy = false }
+                    }
+                },
+            ) { Text("Verify encrypted connection") }
+            OutlinedButton(onClick = { liveSession.close(); probeStatus = "Listening cancelled" }) {
+                Text("Stop listening")
+            }
+            Text(probeStatus)
         }
 
         feedback?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
