@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -124,26 +125,26 @@ private fun ZamCanRescueApp() {
                     NavigationBarItem(
                         selected = page == AppPage.DEVICE,
                         onClick = { page = AppPage.DEVICE },
-                        icon = { Text("02", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Text("03", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         label = { Text(stringResource(R.string.tab_device)) },
                     )
                     NavigationBarItem(
                         selected = page == AppPage.PEERS,
                         onClick = { page = AppPage.PEERS },
-                        icon = { Text("03", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Text("04", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         label = { Text(stringResource(R.string.tab_peers)) },
                     )
                     NavigationBarItem(
                         selected = page == AppPage.SECURITY,
                         onClick = { page = AppPage.SECURITY },
-                        icon = { Text("04", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Text("05", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         label = { Text(stringResource(R.string.tab_security)) },
                     )
                 }
             },
         ) { insets ->
             when (page) {
-                AppPage.OVERVIEW -> OverviewScreen(insets)
+                AppPage.OVERVIEW -> OverviewScreen(insets, onOpenVault = { page = AppPage.RECOVERY }, onOpenPeers = { page = AppPage.PEERS })
                 AppPage.RECOVERY -> RecoveryScreen(insets)
                 AppPage.DEVICE -> DeviceScreen(insets)
                 AppPage.PEERS -> PeerManagementScreen(insets)
@@ -154,42 +155,52 @@ private fun ZamCanRescueApp() {
 }
 
 @Composable
-private fun OverviewScreen(insets: PaddingValues) {
+private fun OverviewScreen(
+    insets: PaddingValues,
+    onOpenVault: () -> Unit,
+    onOpenPeers: () -> Unit,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(insets)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp, vertical = 18.dp),
+        modifier = Modifier.fillMaxSize().padding(insets)
+            .verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        Text("Recovery center", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(
-            stringResource(R.string.overview_title),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            stringResource(R.string.overview_subtitle),
+            "Protect your important files before an emergency.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.76f),
         )
-        StatusCard(
-            title = stringResource(R.string.status_title),
-            body = stringResource(R.string.status_body),
-            accent = MaterialTheme.colorScheme.primary,
-        )
-        StatusCard(
-            title = stringResource(R.string.not_available_title),
-            body = stringResource(R.string.not_available_body),
-            accent = MaterialTheme.colorScheme.secondary,
-        )
+        Card(shape = RoundedCornerShape(24.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("LOCAL RECOVERY", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("Encrypted file vault", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text("Back up or restore a file you choose. Archives are password-protected and checked for tampering.")
+                Button(onClick = onOpenVault, modifier = Modifier.fillMaxWidth()) {
+                    Text("Open recovery vault")
+                }
+            }
+        }
+        Card(shape = RoundedCornerShape(24.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("TRUSTED COMPANION", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("Manage trusted devices", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text("Verify identities and revoke enrollment. Remote backup and restore are not yet enabled.")
+                Button(onClick = onOpenPeers, modifier = Modifier.fillMaxWidth()) {
+                    Text("Manage peers")
+                }
+            }
+        }
         Text(
-            stringResource(R.string.foundation_label),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.2.sp,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+            "Readiness: not yet verified. Complete a backup and a restore test before relying on this app.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
         )
     }
 }
