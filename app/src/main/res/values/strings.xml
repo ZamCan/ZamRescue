@@ -8,10 +8,10 @@
     <string name="overview_title">Rescue, with consent.</string>
     <string name="overview_subtitle">A local-first foundation for safe phone-to-phone assistance.</string>
     <string name="status_title">Development milestone</string>
-    <string name="status_body">The authenticated protocol foundation is being developed. Live phone-to-phone transport and backup restore are not available yet.</string>
-    <string name="foundation_label">ZAMCAN RESCUE · FOUNDATION BUILD</string>
+    <string name="status_body">Local encrypted file backup and restore are available in the Recovery Vault. Authenticated transport is implemented in the protocol module but is not yet connected to device-to-device recovery.</string>
+    <string name="foundation_label">ZAMCAN RESCUE · RECOVERY PREVIEW</string>
     <string name="not_available_title">Not available in this build</string>
-    <string name="not_available_body">No rescue session, backup, restore, screen sharing, remote unlock, or file access is active. This build uses Android Keystore for a local identity and requests network and Wi-Fi multicast-state permissions only for user-started local service discovery. It does not request Bluetooth, camera, storage, or accessibility permissions.</string>
+    <string name="not_available_body">No remote rescue session, screen sharing, remote unlock, or automatic file access is active. User-selected local file backup and restore are available. This build uses Android Keystore for a local identity and requests network and Wi-Fi multicast-state permissions only for user-started local service discovery. It uses the Android document picker for user-selected files and does not request Bluetooth, camera, broad storage, or accessibility permissions.</string>
     <string name="device_title">Device diagnostics</string>
     <string name="device_note">These values come from Android system build properties. They are identifying strings, not a complete hardware-health assessment.</string>
     <string name="manufacturer">Manufacturer</string>
@@ -22,7 +22,7 @@
     <string name="security_title">Security boundaries</string>
     <string name="security_body">Rescue access must be explicitly enrolled, limited to a specific operation, authenticated, time-bounded, and revocable. A previously paired device does not receive unrestricted access.</string>
     <string name="protocol_status_title">Protocol module</string>
-    <string name="protocol_status_body">A standalone Kotlin module defines mutual peer authentication, ephemeral ECDH key agreement, HKDF-SHA-256 key derivation, and AES-GCM records with sequence-based replay rejection. It is not yet wired to an Android transport or backup flow.</string>
+    <string name="protocol_status_body">A standalone Kotlin module defines mutual peer authentication, ephemeral ECDH key agreement, HKDF-SHA-256 key derivation, and AES-GCM records with sequence-based replay rejection. An authenticated TCP transport implementation exists but is not yet wired to Android peer sessions. The local recovery vault is a separate password-encrypted file workflow.</string>
     <string name="no_bypass_title">No lock-screen bypass</string>
     <string name="no_bypass_body">The app does not bypass Android authentication, extract protected keys, exploit debugging, install silently, capture screens silently, or claim remote unlocking.</string>
     <string name="brand_mark_description">ZamCan Rescue mark</string>
