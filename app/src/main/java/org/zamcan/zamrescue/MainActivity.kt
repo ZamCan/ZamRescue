@@ -3,6 +3,7 @@ package org.zamcan.zamrescue
 import android.os.Build
 import android.os.Bundle
 import org.zamcan.zamrescue.recovery.RecoveryScreen
+import org.zamcan.zamrescue.recovery.ManagedRecoveryInspector
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -259,6 +260,13 @@ private fun SecurityScreen(insets: PaddingValues) {
             title = stringResource(R.string.security_title),
             body = stringResource(R.string.security_body),
             accent = MaterialTheme.colorScheme.secondary,
+        )
+        val context = LocalContext.current
+        val eligibility = remember(context) { ManagedRecoveryInspector.inspect(context) }
+        StatusCard(
+            title = "Official Android recovery eligibility",
+            body = eligibility.explanation,
+            accent = MaterialTheme.colorScheme.primary,
         )
         StatusCard(
             title = stringResource(R.string.no_bypass_title),
