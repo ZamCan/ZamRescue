@@ -51,7 +51,7 @@ object StreamingRecoveryVault {
                 val last = count == 0
                 val nonce = nonce(noncePrefix, sequence)
                 val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, nonce))
+                cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, nonce))
                 cipher.updateAAD(header)
                 cipher.updateAAD(byteArrayOf(if (last) 1 else 0))
                 val encrypted = cipher.doFinal(buffer, 0, count)
@@ -86,7 +86,7 @@ object StreamingRecoveryVault {
                 stream.readFully(encrypted)
                 val last = size == TAG
                 val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, nonce(prefix, sequence)))
+                cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, nonce(prefix, sequence)))
                 cipher.updateAAD(header)
                 cipher.updateAAD(byteArrayOf(if (last) 1 else 0))
                 val clear = cipher.doFinal(encrypted)
