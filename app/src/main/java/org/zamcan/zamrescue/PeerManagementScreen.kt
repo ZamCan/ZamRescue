@@ -2,6 +2,7 @@ package org.zamcan.zamrescue
 
 import org.zamcan.zamrescue.transport.LivePeerSession
 import androidx.compose.material3.OutlinedButton
+import java.io.File
 import android.provider.OpenableColumns
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,6 +75,27 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
     val scope = rememberCoroutineScope()
 
     val liveSession = remember(context) { LivePeerSession(context) }
+    var receivedArchive by remember { mutableStateOf<File?>(null) }
+    val exportReceived = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { destination ->
+        val archive = receivedArchive
+        if (destination != null && archive != null) {
+            scope.launch {
+                try {
+                    withContext(Dispatchers.IO) {
+                        context.contentResolver.openOutputStream(destination, "wt").use { output ->
+                            requireNotNull(output) { "Cannot write export destination" }
+                            archive.inputStream().use { input -> input.copyTo(output) }
+                        }
+                    }
+                    probeStatus = "Encrypted archive exported successfully"
+                } catch (e: Exception) {
+                    probeStatus = "Export failed: " + (e.message ?: "storage error")
+                }
+            }
+        }
+    }
     var selectedArchive by remember { mutableStateOf<Uri?>(null) }
     val chooseArchive = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         selectedArchive = it
@@ -367,6 +389,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                             val received = withContext(Dispatchers.IO) {
                                 liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761)
                             }
+                            receivedArchive = received
                             probeStatus = "Encrypted archive received privately: " + received.name +
                                 " (" + received.length() + " bytes). No automatic restore."
                         } catch (e: Exception) {
@@ -405,6 +428,18 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                     }
                 },
             ) { Text("Send encrypted archive") }
+            Button(
+                enabled = receivedArchive?.exists() == true && !probeBusy,
+                onClick = { exportReceived.launch("ZamRescue-received.zrv") }
+            ) { Text("Export received encrypted archive") }
+            OutlinedButton(
+                enabled = receivedArchive != null && !probeBusy,
+                onClick = {
+                    receivedArchive?.delete()
+                    receivedArchive = null
+                    probeStatus = "Received archive deleted"
+                }
+            ) { Text("Delete received archive") }
             Text(probeStatus)
         }
 
