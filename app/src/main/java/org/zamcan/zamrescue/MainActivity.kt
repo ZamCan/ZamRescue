@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -61,20 +62,20 @@ private fun ZamCanRescueApp() {
     val dark = isSystemInDarkTheme()
     val colors = if (dark) {
         darkColorScheme(
-            primary = Color(0xFF8FD5A7),
-            secondary = Color(0xFF8BC8C0),
-            background = Color(0xFF101612),
-            surface = Color(0xFF18211B),
-            onSurface = Color(0xFFE2ECE4),
+            primary = Color(0xFF9BD8ED),
+            secondary = Color(0xFF8DABF1),
+            background = Color(0xFF0B1421),
+            surface = Color(0xFF172638),
+            onSurface = Color(0xFFEAF4FA),
             onBackground = Color(0xFFE2ECE4),
         )
     } else {
         lightColorScheme(
-            primary = Color(0xFF176B45),
-            secondary = Color(0xFF176C68),
-            background = Color(0xFFF4F7F2),
+            primary = Color(0xFF176F9D),
+            secondary = Color(0xFF536FB8),
+            background = Color(0xFFF3F7FB),
             surface = Color(0xFFFFFFFF),
-            onSurface = Color(0xFF17231B),
+            onSurface = Color(0xFF152536),
             onBackground = Color(0xFF17231B),
         )
     }
@@ -94,7 +95,7 @@ private fun ZamCanRescueApp() {
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ) {
                                 androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
-                                    Text("Z", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                                    Text("✦", fontWeight = FontWeight.Bold, fontSize = 19.sp)
                                 }
                             }
                             Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold)
@@ -215,7 +216,7 @@ private fun DeviceScreen(insets: PaddingValues) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.76f),
         )
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 DeviceProperty(stringResource(R.string.manufacturer), manufacturer)
                 DeviceProperty(stringResource(R.string.model), model)
