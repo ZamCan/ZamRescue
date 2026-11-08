@@ -2,6 +2,10 @@ package org.zamcan.zamrescue
 
 import org.zamcan.zamrescue.transport.LivePeerSession
 import androidx.compose.material3.OutlinedButton
+import android.provider.OpenableColumns
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -70,6 +74,10 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
     val scope = rememberCoroutineScope()
 
     val liveSession = remember(context) { LivePeerSession(context) }
+    var selectedArchive by remember { mutableStateOf<Uri?>(null) }
+    val chooseArchive = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+        selectedArchive = it
+    }
     var probeHost by remember { mutableStateOf("") }
     var probePort by remember { mutableStateOf("42761") }
     var selectedPeer by remember { mutableStateOf("") }
@@ -345,6 +353,58 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
             OutlinedButton(onClick = { liveSession.close(); probeStatus = "Listening cancelled" }) {
                 Text("Stop listening")
             }
+            Text("Transfer only an encrypted .zrv archive. The receiving phone must explicitly start receiving. Incoming files remain in private app storage and are never automatically decrypted.")
+            OutlinedButton(onClick = { chooseArchive.launch(arrayOf("*/*")) }) {
+                Text(if (selectedArchive == null) "Select encrypted archive" else "Archive selected")
+            }
+            Button(
+                enabled = !probeBusy && identity != null && peerRecords.any { !it.isRevoked },
+                onClick = {
+                    probeBusy = true
+                    probeStatus = "Waiting for encrypted archive…"
+                    scope.launch {
+                        try {
+                            val received = withContext(Dispatchers.IO) {
+                                liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761)
+                            }
+                            probeStatus = "Encrypted archive received privately: " + received.name +
+                                " (" + received.length() + " bytes). No automatic restore."
+                        } catch (e: Exception) {
+                            probeStatus = "Receive failed: " + (e.message ?: "connection rejected")
+                        } finally { probeBusy = false }
+                    }
+                },
+            ) { Text("Receive encrypted archive") }
+            Button(
+                enabled = !probeBusy && identity != null && selectedArchive != null &&
+                    selectedPeer.isNotBlank() && probeHost.isNotBlank(),
+                onClick = {
+                    val archive = selectedArchive ?: return@Button
+                    probeBusy = true
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                val length = context.contentResolver.query(
+                                    archive, arrayOf(OpenableColumns.SIZE), null, null, null
+                                )?.use { cursor ->
+                                    if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
+                                } ?: error("Provider must report archive size")
+                                require(length >= 0) { "Invalid archive size" }
+                                context.contentResolver.openInputStream(archive).use { input ->
+                                    requireNotNull(input) { "Cannot open archive" }
+                                    liveSession.sendArchive(
+                                        probeHost.trim(), probePort.toIntOrNull() ?: 42761,
+                                        selectedPeer, input, length
+                                    )
+                                }
+                            }
+                            probeStatus = "Encrypted archive delivered and acknowledged"
+                        } catch (e: Exception) {
+                            probeStatus = "Transfer failed: " + (e.message ?: "connection rejected")
+                        } finally { probeBusy = false }
+                    }
+                },
+            ) { Text("Send encrypted archive") }
             Text(probeStatus)
         }
 
