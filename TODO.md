@@ -2,22 +2,23 @@
 
 ## Android product foundation
 
-- [ ] Native Android implementation using Kotlin and Jetpack Compose.
-- [ ] Clean modular architecture with documented interfaces.
-- [ ] Offline operation without requiring cloud infrastructure.
-- [ ] Professional dark and light themes.
-- [ ] Swahili and English localization.
-- [ ] Accessibility and battery-efficient operation.
+- [x] Native Android implementation using Kotlin and Jetpack Compose.
+- [x] Clean modular architecture with documented interfaces.
+- [x] Offline operation without requiring cloud infrastructure (the current source uses no cloud service).
+- [x] Professional dark and light themes.
+- [x] Swahili and English localization for current screens.
+- [ ] Accessibility and battery-efficient operation review.
 
 ## Prepared rescue and secure connectivity
 
 - [ ] Bluetooth LE discovery and authenticated local communication.
-- [ ] Wi-Fi Direct and local-network communication.
+- [ ] Wi-Fi Direct and local-network TCP communication.
+- [x] Foreground NSD service discovery with explicit start/stop; results remain untrusted metadata.
 - [ ] USB-C transport research and implementation where supported.
-- [ ] Secure device enrollment and trusted-peer management.
-- [ ] Capability-based permissions and revocation.
-- [ ] Implement replay protection, session expiration, peer revocation, and safe failure behavior.
-- [ ] Require explicit enrollment, secure authentication, permission scoping, and audit logging.
+- [x] Android Keystore P-256 identity, full-fingerprint-confirmed manual peer enrollment, local peer records, and revocation (source-level; Android build/device validation still pending).
+- [ ] Capability-based permissions and operation-specific consent.
+- [ ] Integrate identity allowlists with a live authenticated session; preserve replay protection, expiry, revocation, and safe failure behavior end to end.
+- [ ] Require explicit enrollment, secure authentication, permission scoping, and audit logging for real rescue operations.
 - [ ] Previously paired devices must not receive unrestricted access.
 - [ ] The first milestone must demonstrate authenticated communication between two physical Android devices, followed by encrypted backup transfer and successful restoration.
 
@@ -41,20 +42,20 @@
 ## Security and implementation integrity
 
 - [ ] Do not attempt to bypass Android lock-screen authentication, extract protected encryption keys, exploit USB debugging, silently install applications, or circumvent user consent.
-- [ ] Use vetted cryptographic implementations and Android Keystore where appropriate.
-- [ ] No fake functionality.
-- [ ] No buttons that only display explanations instead of performing their advertised operation.
-- [ ] No invented Android APIs.
-- [ ] No mock data presented as actual device information.
-- [ ] No unrestricted background monitoring.
-- [ ] No unnecessary permissions.
-- [ ] No misleading claims of password bypass or data recovery.
-- [ ] No hidden remote-control functionality.
-- [ ] No silent screen capture.
+- [x] Use vetted cryptographic implementations and Android Keystore where appropriate.
+- [x] No fake functionality in implemented controls; NSD is explicitly described as discovery only.
+- [x] No buttons that only display explanations instead of performing their advertised operation in the implemented peer/discovery flows.
+- [x] No invented Android APIs.
+- [x] No mock data presented as actual device information.
+- [x] No unrestricted background monitoring.
+- [x] No unnecessary permissions identified for the implemented NSD feature.
+- [x] No misleading claims of password bypass or data recovery.
+- [x] No hidden remote-control functionality.
+- [x] No silent screen capture.
 
 ## Validation and delivery
 
-- [ ] Run unit tests, instrumentation tests, and security checks.
+- [ ] Compile Android app and run unit tests, instrumentation tests, and security checks for the new Android code.
 - [ ] Build an installable debug APK when build tooling is available.
 - [ ] Complete Android Studio/Gradle project with Kotlin source code, modular architecture, security design and threat model, AGENTS.md engineering instructions, README with installation and testing procedures, physical-device compatibility matrix, unit and instrumentation tests, and an honest implementation report listing completed, conditional, and unimplemented features.
 - [ ] Prioritize a small number of genuinely functional rescue operations over an impressive-looking but nonfunctional prototype.

@@ -1,31 +1,36 @@
 # Implementation report
 
-Updated: 2026-11-07
+Updated: 2026-11-08
 
 ## Implemented in source
 
-- Empty repository initialized as an Android Studio Gradle project with an `app` module and a pure Kotlin `secure-protocol` module.
-- Jetpack Compose app shell with working Overview, This device, and Security navigation.
-- English and Swahili string resources, system light/dark themes, and visible text labels for navigation.
-- Read-only Android build diagnostics from the actual runtime `Build` properties.
-- A pure Kotlin protocol implementation for P-256 ECDSA signatures, ephemeral P-256 ECDH, transcript-bound mutual peer authentication, bounded handshake codecs, Google Tink HKDF-SHA-256, AES-GCM records, and strict sequence-based replay rejection.
-- Nine JVM protocol tests passed with `./gradlew --no-daemon :secure-protocol:test` on 2026-11-07. Tests cover valid exchange/key agreement, RFC 5869 known-answer output, untrusted-peer rejection and retry, transcript tampering, invitation expiry and one-use behavior, record tampering/replay/order, message codec bounds, cross-session ciphertext variation, and rejection of non-P-256 public keys.
-- An Android instrumentation test source file is present for app navigation and diagnostics but has not been executed.
-- Architecture, security, compatibility, transport roadmap, repository instructions, and progress documents.
+- Android Studio Gradle project with a Compose `app` module and an Android-independent `secure-protocol` module.
+- Four localized Compose destinations: Overview, This device, Peers, and Security. Runtime diagnostics still read actual Android `Build` properties.
+- `AndroidKeystoreIdentityProvider`: explicit creation/loading of an app-scoped P-256 ECDSA signing key in Android Keystore; private key is used as a non-exportable platform handle. Corrupt/missing key material is not silently replaced. Security level is queried and displayed as reported by the provider.
+- `PeerEnrollmentRepository`: validates P-256 public keys, requires full SHA-256 fingerprint re-entry after an out-of-band comparison, stores only public peer records and labels in app-private preferences, preserves revocations, and exposes only non-revoked peer keys to the protocol layer.
+- Peer UI for public-key exchange by clipboard/paste, fingerprint confirmation, peer listing, and revocation. Each device must enroll the other independently. This is a manual bootstrap, not an authenticated network pairing flow.
+- `AndroidNsdPeerDiscovery`: explicit user-started DNS-SD discovery for the ZamCan service type; returns service metadata as untrusted candidates and releases discovery/multicast resources on stop. Its optional advertiser requires a live bound TCP server socket and is not activated because no TCP listener exists.
+- Only the normal `INTERNET` and `CHANGE_WIFI_MULTICAST_STATE` permissions were added for local service discovery. No Bluetooth, camera, storage, or accessibility permissions were added.
+- Added Android instrumentation test sources for identity persistence/signing and fingerprint-gated peer enrollment/revocation, using unique test-only Keystore aliases and preferences so production records are not touched.
+- Android platform references captured in `docs/ANDROID_TRANSPORT_REFERENCES.md`; architecture, threat model, and transport roadmap updated.
+- Nine JVM protocol tests passed with `./gradlew --no-daemon :secure-protocol:test` on 2026-11-07. These tests cover valid exchange/key agreement, RFC 5869 output, untrusted-peer rejection/retry, transcript tampering, invitation expiry and one-use behavior, record tampering/replay/order, codec bounds, cross-session ciphertext variation, and rejection of non-P-256 public keys.
 
 ## Conditional or unverified
 
-- The protocol module is designed to be usable by Android and JVM, but it has not yet been shown to run on physical Android devices or across the Android cryptographic providers in the declared API range.
-- The app build was attempted with `./gradlew --no-daemon :app:assembleDebug` on 2026-11-07 and did not reach Android compilation. It failed because the sandbox has a Java 21 runtime but no Java compiler (`javac`); no Android SDK variables or Android build tools are configured. No APK was built.
-- No physical devices or `adb` test target are attached. The authenticated two-physical-device milestone is therefore not demonstrated.
+- The new Android source has not been compiled. The current sandbox has a Java 21 runtime but no `javac` and no configured Android SDK. No APK was built.
+- Keystore key creation, persistence across process/device restarts, signature use, reported TEE/StrongBox/software levels, and provider compatibility remain unverified on Android devices.
+- NSD discovery, mDNS multicast behavior, service resolution, stop-on-background handling, permission behavior, and advertiser registration remain unverified on device/emulator.
+- The existing Compose instrumentation tests and the new identity/enrollment instrumentation tests have not been executed. No physical devices or `adb` target are attached.
+- The new Compose UI and English/Swahili resource parity have not been run through an Android build or accessibility review.
 
 ## Not implemented
 
-- Android Keystore identity generation/use, peer enrollment UI, fingerprint confirmation, trusted-peer persistence, scoped capabilities, peer revocation, audit storage, session UI, local TCP, BLE, Wi-Fi Direct, USB-C, transfer resumption, or secure device discovery.
-- Encrypted backup vault, independent recovery credential, backup/restore, file selection, data integrity manifest, or destructive restore confirmation.
-- Device health/recovery-state detection beyond displaying real Android build identifiers.
-- Consent-based screen sharing or accessibility assistance.
-- Direct Boot functionality, enterprise-management integration, OEM-specific unprepared recovery guidance, or recovery support claims.
-- Android app compilation, instrumentation test execution, physical-device compatibility testing, security review, or APK build.
+- A live TCP listener/client or socket framing; Android NSD metadata is not a connection.
+- Wiring the Android Keystore identity and peer allowlist into the authenticated handshake over a transport; session transcript confirmation, user consent scopes, audit events, and monotonic host-side invitation expiry.
+- QR or authenticated automatic enrollment. Manual Base64 key exchange and full in-person fingerprint comparison are the current bootstrap only.
+- Target-SDK-37 local-network runtime permission/system-picker flow, BLE, Wi-Fi Direct, USB-C, background transport, transfer resumption, or peer-connection lifecycle.
+- Encrypted backup vault, independent recovery credential, backup/restore, file selection, integrity manifest, or destructive restore confirmation.
+- Device health/recovery-state detection beyond displaying actual Android build identifiers; consent-based screen sharing; Direct Boot; enterprise-management integration; or recovery support claims.
+- Independent mobile-security review, cryptographic audit, Android compilation, instrumentation execution, physical-device compatibility testing, or APK build.
 
-The source code is an initial engineering foundation. It must not be described as a working phone-to-phone rescue product until the missing transport, identity lifecycle, backup flow, security review, and device validation are complete.
+The project is still a development foundation, not a working phone-to-phone rescue product. Discovery results do not authenticate devices, and peer enrollment does not authorize any rescue operation.

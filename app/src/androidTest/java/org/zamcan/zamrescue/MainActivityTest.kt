@@ -29,6 +29,16 @@ class MainActivityTest {
     }
 
     @Test
+    fun peersTabExplainsFingerprintEnrollmentAndDiscoveryOnlyBehavior() {
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.tab_peers)).performClick()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.peers_title)).assertExists()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.identity_section_title)).assertExists()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.peer_enrollment_title)).assertExists()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.nsd_section_title)).assertExists()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.nsd_discovery_explanation)).assertExists()
+    }
+
+    @Test
     fun securityTabDisclosesThatProtocolHasNoAndroidTransportIntegration() {
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.tab_security)).performClick()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.protocol_status_title)).assertExists()

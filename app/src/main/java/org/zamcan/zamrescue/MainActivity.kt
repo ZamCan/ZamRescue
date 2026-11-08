@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 
-private enum class AppPage { OVERVIEW, DEVICE, SECURITY }
+private enum class AppPage { OVERVIEW, DEVICE, PEERS, SECURITY }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,9 +120,15 @@ private fun ZamCanRescueApp() {
                         label = { Text(stringResource(R.string.tab_device)) },
                     )
                     NavigationBarItem(
+                        selected = page == AppPage.PEERS,
+                        onClick = { page = AppPage.PEERS },
+                        icon = { Text("03", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        label = { Text(stringResource(R.string.tab_peers)) },
+                    )
+                    NavigationBarItem(
                         selected = page == AppPage.SECURITY,
                         onClick = { page = AppPage.SECURITY },
-                        icon = { Text("03", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Text("04", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         label = { Text(stringResource(R.string.tab_security)) },
                     )
                 }
@@ -131,6 +137,7 @@ private fun ZamCanRescueApp() {
             when (page) {
                 AppPage.OVERVIEW -> OverviewScreen(insets)
                 AppPage.DEVICE -> DeviceScreen(insets)
+                AppPage.PEERS -> PeerManagementScreen(insets)
                 AppPage.SECURITY -> SecurityScreen(insets)
             }
         }

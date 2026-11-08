@@ -12,8 +12,10 @@
 
 - `app/` is the Android/Kotlin/Jetpack Compose shell and platform-adapter layer.
 - `secure-protocol/` is pure Kotlin/JVM protocol logic with no Android dependency. Preserve that separation so its security tests can run without an Android SDK.
-- Keep platform permissions capability-based and request each only when a real user-started feature needs it. No current feature needs network, Bluetooth, camera, storage, accessibility, or Direct Boot permissions.
-- Document transport and platform constraints before adding BLE, local sockets, Wi-Fi Direct, USB-C, accessibility, or enterprise-management integrations.
+- Keep platform permissions capability-based and request each only when a real user-started feature needs it. Current NSD discovery declares normal `INTERNET` and `CHANGE_WIFI_MULTICAST_STATE` permissions; it does not request Bluetooth, camera, storage, accessibility, or Direct Boot permissions.
+- Treat NSD results as untrusted discovery metadata only. Do not call discovery an authenticated transport or connect a result until peer identity, session consent, socket framing, and failure handling are integrated.
+- Stop discovery and release multicast resources when the feature or app leaves the foreground. Do not add background monitoring for peer discovery.
+- Reassess Android local-network permission and system-picker behavior before raising target SDK to 37 or opening direct LAN sockets.
 
 ## Security engineering
 
