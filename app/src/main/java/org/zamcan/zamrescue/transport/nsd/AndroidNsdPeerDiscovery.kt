@@ -120,7 +120,7 @@ class AndroidNsdPeerDiscovery(context: Context) : Closeable {
             setServiceName(serviceName)
             serviceType = SERVICE_TYPE
             setPort(socket.localPort)
-            setAttribute("v", PROTOCOL_VERSION.toString().toByteArray(Charsets.US_ASCII))
+            setAttribute("v", PROTOCOL_VERSION.toString())
         }
         val listener = createRegistrationListener(observer)
         synchronized(lock) {
