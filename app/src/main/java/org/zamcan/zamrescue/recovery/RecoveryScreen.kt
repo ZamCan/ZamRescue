@@ -71,7 +71,7 @@ fun RecoveryScreen(insets: PaddingValues) {
                 } catch (_: Exception) {
                     "Operation failed. Check the password, file size, format, and destination. A failed restore destination must be discarded."
                 } finally {
-                    secret.fill('\\u0000')
+                    secret.fill(0.toChar())
                     busy = false
                     source = null
                 }
