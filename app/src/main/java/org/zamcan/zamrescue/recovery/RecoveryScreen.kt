@@ -55,16 +55,23 @@ fun RecoveryScreen(insets: PaddingValues) {
             scope.launch {
                 status = try {
                     withContext(Dispatchers.IO) {
-                        context.contentResolver.openInputStream(selected).use { input ->
-                            requireNotNull(input) { "Cannot read selected file" }
-                            context.contentResolver.openOutputStream(destination, "wt").use { output ->
-                                requireNotNull(output) { "Cannot write destination" }
-                                if (chosenMode == "backup") {
-                                    RecoveryVault.encrypt(input, output, secret)
-                                } else {
-                                    RecoveryVault.decrypt(input, output, secret)
+                        try {
+                            context.contentResolver.openInputStream(selected).use { input ->
+                                requireNotNull(input) { "Cannot read selected file" }
+                                context.contentResolver.openOutputStream(destination, "wt").use { output ->
+                                    requireNotNull(output) { "Cannot write destination" }
+                                    if (chosenMode == "backup") {
+                                        RecoveryVault.encrypt(input, output, secret)
+                                    } else {
+                                        RecoveryVault.decrypt(input, output, secret)
+                                    }
                                 }
                             }
+                        } catch (error: Exception) {
+                            // CreateDocument may have already created a partial file.
+                            // Never leave a failed archive or restore visible as a valid result.
+                            try { context.contentResolver.delete(destination, null, null) } catch (_: Exception) {}
+                            throw error
                         }
                     }
                     if (chosenMode == "backup") "Encrypted backup saved." else "File restored and authenticated."
