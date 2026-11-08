@@ -61,9 +61,9 @@ fun RecoveryScreen(insets: PaddingValues) {
                                 context.contentResolver.openOutputStream(destination, "wt").use { output ->
                                     requireNotNull(output) { "Cannot write destination" }
                                     if (chosenMode == "backup") {
-                                        RecoveryVault.encrypt(input, output, secret)
+                                        StreamingRecoveryVault.encrypt(input, output, secret)
                                     } else {
-                                        RecoveryVault.decrypt(input, output, secret)
+                                        StreamingRecoveryVault.decrypt(input, output, secret)
                                     }
                                 }
                             }
@@ -74,9 +74,9 @@ fun RecoveryScreen(insets: PaddingValues) {
                             throw error
                         }
                     }
-                    if (chosenMode == "backup") "Encrypted backup saved." else "File restored and authenticated."
+                    if (chosenMode == "backup") "Encrypted backup saved." else "Archive authenticated and file restored."
                 } catch (_: Exception) {
-                    "Operation failed. Check the password, file size, format, and destination. A failed restore destination must be discarded."
+                    "Operation failed. Check the password, file size, format, and destination. Any partial output is deleted when the document provider permits it."
                 } finally {
                     secret.fill(0.toChar())
                     busy = false
@@ -90,7 +90,7 @@ fun RecoveryScreen(insets: PaddingValues) {
     ) { selected ->
         source = selected
         if (selected != null) {
-            destinationPicker.launch(if (mode == "backup") "ZamRescue-backup.zrv" else "ZamRescue-restored-file")
+            destinationPicker.launch(if (mode == "backup") "ZamRescue-backup-v2.zrv" else "ZamRescue-restored-file")
         }
     }
 
@@ -103,7 +103,7 @@ fun RecoveryScreen(insets: PaddingValues) {
         Card {
             Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Private backup", style = MaterialTheme.typography.titleLarge)
-                Text("Choose one accessible file (up to 32 MiB), then select where to save its encrypted .zrv archive.")
+                Text("Choose an accessible file, then select where to save its encrypted, streaming .zrv archive.")
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it.take(256) },
