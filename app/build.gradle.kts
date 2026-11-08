@@ -12,9 +12,33 @@ android {
         applicationId = "org.zamcan.zamrescue"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("production") {
+            val store = System.getenv("ZAMRESCUE_KEYSTORE_PATH")
+            val storePass = System.getenv("ZAMRESCUE_KEYSTORE_PASSWORD")
+            val alias = System.getenv("ZAMRESCUE_KEY_ALIAS")
+            val keyPass = System.getenv("ZAMRESCUE_KEY_PASSWORD")
+            if (!store.isNullOrBlank() && !storePass.isNullOrBlank() &&
+                !alias.isNullOrBlank() && !keyPass.isNullOrBlank()) {
+                storeFile = file(store)
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("production")
+        }
     }
 
     buildFeatures { compose = true }
