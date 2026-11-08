@@ -35,4 +35,32 @@ class RecoveryVaultTest {
             RecoveryVault.decrypt(ByteArrayInputStream(bytes), ByteArrayOutputStream(), "correct-horse-vault".toCharArray())
         }
     }
+    @Test fun truncatedArchiveIsRejectedWithoutWriting() {
+        val encrypted = ByteArrayOutputStream()
+        RecoveryVault.encrypt(ByteArrayInputStream("valuable".toByteArray()), encrypted, "correct-horse-vault".toCharArray())
+        val bytes = encrypted.toByteArray().copyOf(encrypted.size() - 5)
+        val destination = ByteArrayOutputStream()
+        assertThrows(Exception::class.java) {
+            RecoveryVault.decrypt(ByteArrayInputStream(bytes), destination, "correct-horse-vault".toCharArray())
+        }
+        assertArrayEquals(byteArrayOf(), destination.toByteArray())
+    }
+
+    @Test fun encryptingSameFileTwiceProducesDifferentArchives() {
+        val first = ByteArrayOutputStream()
+        val second = ByteArrayOutputStream()
+        val data = "same data".toByteArray()
+        RecoveryVault.encrypt(ByteArrayInputStream(data), first, "correct-horse-vault".toCharArray())
+        RecoveryVault.encrypt(ByteArrayInputStream(data), second, "correct-horse-vault".toCharArray())
+        org.junit.Assert.assertFalse(first.toByteArray().contentEquals(second.toByteArray()))
+    }
+
+    @Test fun emptyFileRoundTrips() {
+        val encrypted = ByteArrayOutputStream()
+        RecoveryVault.encrypt(ByteArrayInputStream(byteArrayOf()), encrypted, "correct-horse-vault".toCharArray())
+        val restored = ByteArrayOutputStream()
+        RecoveryVault.decrypt(ByteArrayInputStream(encrypted.toByteArray()), restored, "correct-horse-vault".toCharArray())
+        assertArrayEquals(byteArrayOf(), restored.toByteArray())
+    }
+
 }
