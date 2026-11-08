@@ -2,6 +2,7 @@ package org.zamcan.zamrescue
 
 import android.os.Build
 import android.os.Bundle
+import org.zamcan.zamrescue.recovery.RecoveryScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 
-private enum class AppPage { OVERVIEW, DEVICE, PEERS, SECURITY }
+private enum class AppPage { OVERVIEW, RECOVERY, DEVICE, PEERS, SECURITY }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,6 +115,12 @@ private fun ZamCanRescueApp() {
                         label = { Text(stringResource(R.string.tab_overview)) },
                     )
                     NavigationBarItem(
+                        selected = page == AppPage.RECOVERY,
+                        onClick = { page = AppPage.RECOVERY },
+                        icon = { Text("02", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        label = { Text("Vault") },
+                    )
+                    NavigationBarItem(
                         selected = page == AppPage.DEVICE,
                         onClick = { page = AppPage.DEVICE },
                         icon = { Text("02", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
@@ -136,6 +143,7 @@ private fun ZamCanRescueApp() {
         ) { insets ->
             when (page) {
                 AppPage.OVERVIEW -> OverviewScreen(insets)
+                AppPage.RECOVERY -> RecoveryScreen(insets)
                 AppPage.DEVICE -> DeviceScreen(insets)
                 AppPage.PEERS -> PeerManagementScreen(insets)
                 AppPage.SECURITY -> SecurityScreen(insets)
