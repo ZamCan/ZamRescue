@@ -1,6 +1,9 @@
 package org.zamcan.zamrescue.recovery
 
 import android.net.Uri
+import java.io.File
+import java.io.PushbackInputStream
+import java.io.DataInputStream
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -56,15 +59,39 @@ fun RecoveryScreen(insets: PaddingValues) {
                 status = try {
                     withContext(Dispatchers.IO) {
                         try {
-                            context.contentResolver.openInputStream(selected).use { input ->
-                                requireNotNull(input) { "Cannot read selected file" }
-                                context.contentResolver.openOutputStream(destination, "wt").use { output ->
-                                    requireNotNull(output) { "Cannot write destination" }
-                                    if (chosenMode == "backup") {
+                            if (chosenMode == "backup") {
+                                context.contentResolver.openInputStream(selected).use { input ->
+                                    requireNotNull(input) { "Cannot read selected file" }
+                                    context.contentResolver.openOutputStream(destination, "wt").use { output ->
+                                        requireNotNull(output) { "Cannot write destination" }
                                         StreamingRecoveryVault.encrypt(input, output, secret)
-                                    } else {
-                                        StreamingRecoveryVault.decrypt(input, output, secret)
                                     }
+                                }
+                            } else {
+                                // Authenticate the complete archive in private temporary storage.
+                                // Never expose partially decrypted data in a user-visible document.
+                                val temporary = File.createTempFile("zamrescue-restore-", ".tmp", context.cacheDir)
+                                try {
+                                    context.contentResolver.openInputStream(selected).use { input ->
+                                        requireNotNull(input) { "Cannot read selected archive" }
+                                        val peek = PushbackInputStream(input, 4)
+                                        val magic = ByteArray(4)
+                                        DataInputStream(peek).readFully(magic)
+                                        peek.unread(magic)
+                                        temporary.outputStream().use { output ->
+                                            when (DataInputStream(magic.inputStream()).readInt()) {
+                                                0x5A525631 -> RecoveryVault.decrypt(peek, output, secret)
+                                                0x5A525632 -> StreamingRecoveryVault.decrypt(peek, output, secret)
+                                                else -> error("Unsupported archive format")
+                                            }
+                                        }
+                                    }
+                                    context.contentResolver.openOutputStream(destination, "wt").use { output ->
+                                        requireNotNull(output) { "Cannot write destination" }
+                                        temporary.inputStream().use { it.copyTo(output) }
+                                    }
+                                } finally {
+                                    temporary.delete()
                                 }
                             }
                         } catch (error: Exception) {
