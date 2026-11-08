@@ -4,6 +4,9 @@ import android.content.Context
 import org.zamcan.zamrescue.identity.AndroidKeystoreIdentityProvider
 import org.zamcan.zamrescue.identity.PeerEnrollmentRepository
 import org.zamcan.zamrescue.protocol.AuthenticatedRescueSocket
+import org.zamcan.zamrescue.protocol.EncryptedBackupTransfer
+import java.io.File
+import java.io.InputStream
 import java.io.Closeable
 import java.net.ServerSocket
 
@@ -54,6 +57,47 @@ class LivePeerSession(private val context: Context) : Closeable {
             }
         }
         return "Authenticated peer probe succeeded"
+    }
+
+    /**
+     * Explicit receiver action. Only a verified enrolled peer can connect.
+     * The received encrypted archive stays private and is not auto-restored.
+     */
+    fun receiveArchive(port: Int = 42761): File {
+        val keys = repository.trustedPublicKeys()
+        require(keys.isNotEmpty()) { "Enroll a trusted peer first" }
+        val own = requireNotNull(identity.load()) { "Create an identity first" }
+        val server = ServerSocket(port)
+        listener = server
+        val staged = File.createTempFile("incoming-", ".zrv", context.filesDir)
+        var success = false
+        try {
+            server.soTimeout = 60_000
+            server.accept().use { socket ->
+                AuthenticatedRescueSocket.accept(socket, own.keyPair, keys).use { session ->
+                    staged.outputStream().use { output ->
+                        EncryptedBackupTransfer.receive(session, output)
+                    }
+                }
+            }
+            success = true
+            return staged
+        } finally {
+            listener = null
+            server.close()
+            if (!success) staged.delete()
+        }
+    }
+
+    /** Explicit sender action; only selected, enrolled, non-revoked receiver. */
+    fun sendArchive(host: String, port: Int, peerFingerprint: String, input: InputStream, size: Long) {
+        val peer = repository.peers().singleOrNull {
+            !it.isRevoked && it.fingerprintHex.equals(peerFingerprint, ignoreCase = true)
+        } ?: error("Select an active enrolled peer")
+        val own = requireNotNull(identity.load()) { "Create an identity first" }
+        AuthenticatedRescueSocket.connect(host, port, own.keyPair, peer.publicKeyEncoded).use { session ->
+            EncryptedBackupTransfer.send(session, input, size)
+        }
     }
 
     override fun close() {
