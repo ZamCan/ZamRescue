@@ -5,6 +5,7 @@ import org.zamcan.zamrescue.identity.AndroidKeystoreIdentityProvider
 import org.zamcan.zamrescue.identity.PeerEnrollmentRepository
 import org.zamcan.zamrescue.protocol.AuthenticatedRescueSocket
 import org.zamcan.zamrescue.protocol.EncryptedBackupTransfer
+import java.security.MessageDigest
 import java.io.File
 import java.io.InputStream
 import java.io.Closeable
@@ -63,7 +64,8 @@ class LivePeerSession(private val context: Context) : Closeable {
      * Explicit receiver action. Only a verified enrolled peer can connect.
      * The received encrypted archive stays private and is not auto-restored.
      */
-    fun receiveArchive(port: Int = 42761): File {
+    fun receiveArchive(port: Int = 42761, approvalCode: String): File {
+        require(approvalCode.matches(Regex("[0-9]{6}"))) { "Invalid approval code" }
         val keys = repository.trustedPublicKeys()
         require(keys.isNotEmpty()) { "Enroll a trusted peer first" }
         val own = requireNotNull(identity.load()) { "Create an identity first" }
@@ -75,6 +77,11 @@ class LivePeerSession(private val context: Context) : Closeable {
             server.soTimeout = 60_000
             server.accept().use { socket ->
                 AuthenticatedRescueSocket.accept(socket, own.keyPair, keys).use { session ->
+                    val suppliedCode = session.receive()
+                    require(MessageDigest.isEqual(suppliedCode, approvalCode.toByteArray(Charsets.US_ASCII))) {
+                        "Receiver approval code mismatch"
+                    }
+                    session.send("ZAMRESCUE_APPROVED_V1".toByteArray())
                     staged.outputStream().use { output ->
                         EncryptedBackupTransfer.receive(session, output)
                     }
@@ -90,12 +97,17 @@ class LivePeerSession(private val context: Context) : Closeable {
     }
 
     /** Explicit sender action; only selected, enrolled, non-revoked receiver. */
-    fun sendArchive(host: String, port: Int, peerFingerprint: String, input: InputStream, size: Long) {
+    fun sendArchive(host: String, port: Int, peerFingerprint: String, input: InputStream, size: Long, approvalCode: String) {
+        require(approvalCode.matches(Regex("[0-9]{6}"))) { "Invalid approval code" }
         val peer = repository.peers().singleOrNull {
             !it.isRevoked && it.fingerprintHex.equals(peerFingerprint, ignoreCase = true)
         } ?: error("Select an active enrolled peer")
         val own = requireNotNull(identity.load()) { "Create an identity first" }
         AuthenticatedRescueSocket.connect(host, port, own.keyPair, peer.publicKeyEncoded).use { session ->
+            session.send(approvalCode.toByteArray(Charsets.US_ASCII))
+            require(session.receive().contentEquals("ZAMRESCUE_APPROVED_V1".toByteArray())) {
+                "Receiver did not authorize this transfer"
+            }
             EncryptedBackupTransfer.send(session, input, size)
         }
     }
