@@ -16,7 +16,7 @@ object EncryptedBackupTransfer {
     private const val END: Byte = 3
     private const val ACK: Byte = 4
     private const val CHUNK = 64 * 1024
-    private const val MAX_BYTES = 4L * 1024 * 1024 * 1024
+    private const val MAX_BYTES = 512L * 1024 * 1024
 
     fun send(session: AuthenticatedRescueSocket, source: InputStream, length: Long) {
         require(length in 0..MAX_BYTES) { "Unsupported transfer length" }
