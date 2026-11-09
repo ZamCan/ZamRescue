@@ -2,6 +2,7 @@ package org.zamcan.zamrescue
 
 import org.zamcan.zamrescue.transport.LivePeerSession
 import androidx.compose.material3.OutlinedButton
+import java.security.SecureRandom
 import java.io.File
 import android.provider.OpenableColumns
 import android.net.Uri
@@ -97,6 +98,8 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
             }
         }
     }
+    var transferCode by remember { mutableStateOf("") }
+    var receiveCode by remember { mutableStateOf("") }
     var selectedArchive by remember { mutableStateOf<Uri?>(null) }
     val chooseArchive = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         selectedArchive = it
@@ -358,7 +361,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                 },
             ) { Text("Listen for peer") }
             Button(
-                enabled = !probeBusy && identity != null && selectedPeer.isNotBlank() && probeHost.isNotBlank(),
+                enabled = !probeBusy && identity != null && selectedPeer.isNotBlank() && probeHost.isNotBlank() && transferCode.length == 6,
                 onClick = {
                     probeBusy = true
                     scope.launch {
@@ -375,6 +378,16 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
             OutlinedButton(onClick = { liveSession.close(); probeStatus = "Listening cancelled" }) {
                 Text("Stop listening")
             }
+            OutlinedTextField(
+                value = transferCode,
+                onValueChange = { transferCode = it.filter(Char::isDigit).take(6) },
+                label = { Text("Receiver's six-digit approval code") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            if (probeBusy && receiveCode.isNotEmpty()) {
+                Text("Give this one-time code to the sender: " + receiveCode)
+            }
             Text("Transfer only an encrypted .zrv archive. The receiving phone must explicitly start receiving. Incoming files remain in private app storage and are never automatically decrypted.")
             OutlinedButton(onClick = { chooseArchive.launch(arrayOf("*/*")) }) {
                 Text(if (selectedArchive == null) "Select encrypted archive" else "Archive selected")
@@ -382,19 +395,21 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
             Button(
                 enabled = !probeBusy && identity != null && peerRecords.any { !it.isRevoked },
                 onClick = {
+                    val code = (SecureRandom().nextInt(900_000) + 100_000).toString()
+                    receiveCode = code
                     probeBusy = true
                     probeStatus = "Waiting for encrypted archive…"
                     scope.launch {
                         try {
                             val received = withContext(Dispatchers.IO) {
-                                liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761)
+                                liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761, code)
                             }
                             receivedArchive = received
                             probeStatus = "Encrypted archive received privately: " + received.name +
                                 " (" + received.length() + " bytes). No automatic restore."
                         } catch (e: Exception) {
                             probeStatus = "Receive failed: " + (e.message ?: "connection rejected")
-                        } finally { probeBusy = false }
+                        } finally { probeBusy = false; receiveCode = "" }
                     }
                 },
             ) { Text("Receive encrypted archive") }
@@ -417,7 +432,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                                     requireNotNull(input) { "Cannot open archive" }
                                     liveSession.sendArchive(
                                         probeHost.trim(), probePort.toIntOrNull() ?: 42761,
-                                        selectedPeer, input, length
+                                        selectedPeer, input, length, transferCode
                                     )
                                 }
                             }
