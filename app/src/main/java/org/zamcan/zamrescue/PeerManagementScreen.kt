@@ -75,6 +75,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
     val scope = rememberCoroutineScope()
 
     val liveSession = remember(context) { LivePeerSession(context) }
+    var probeStatus by remember { mutableStateOf("No active peer session") }
     var receivedArchive by remember { mutableStateOf<File?>(null) }
     val exportReceived = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream")
@@ -104,7 +105,6 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
     var probePort by remember { mutableStateOf("42761") }
     var selectedPeer by remember { mutableStateOf("") }
     var probeBusy by remember { mutableStateOf(false) }
-    var probeStatus by remember { mutableStateOf("No active peer session") }
     var identity by remember { mutableStateOf<DeviceIdentity?>(null) }
     var identityState by remember { mutableStateOf(IdentityUiState.LOADING) }
     var peerRecords by remember { mutableStateOf<List<TrustedPeerRecord>>(emptyList()) }
