@@ -71,7 +71,7 @@ class LivePeerSession(private val context: Context) : Closeable {
         val own = requireNotNull(identity.load()) { "Create an identity first" }
         val server = ServerSocket(port)
         listener = server
-        val staged = File.createTempFile("incoming-", ".zrv", context.filesDir)
+        val staged = File.createTempFile("incoming-", ".zrv", context.cacheDir)
         var success = false
         try {
             server.soTimeout = 60_000
