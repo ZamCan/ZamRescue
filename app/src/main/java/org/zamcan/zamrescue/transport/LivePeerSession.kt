@@ -64,10 +64,12 @@ class LivePeerSession(private val context: Context) : Closeable {
      * Explicit receiver action. Only a verified enrolled peer can connect.
      * The received encrypted archive stays private and is not auto-restored.
      */
-    fun receiveArchive(port: Int = 42761, approvalCode: String): File {
+    fun receiveArchive(port: Int = 42761, approvalCode: String, senderFingerprint: String): File {
         require(approvalCode.matches(Regex("[0-9]{6}"))) { "Invalid approval code" }
-        val keys = repository.trustedPublicKeys()
-        require(keys.isNotEmpty()) { "Enroll a trusted peer first" }
+        val sender = repository.peers().singleOrNull {
+            !it.isRevoked && it.fingerprintHex.equals(senderFingerprint, ignoreCase = true)
+        } ?: error("Select an active enrolled sender")
+        val keys = listOf(sender.publicKeyEncoded)
         val own = requireNotNull(identity.load()) { "Create an identity first" }
         val server = ServerSocket(port)
         listener = server
