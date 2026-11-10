@@ -345,7 +345,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                 }
             }
             Button(
-                enabled = !probeBusy && identity != null && peerRecords.any { !it.isRevoked },
+                enabled = !probeBusy && identity != null && selectedPeer.isNotBlank(),
                 onClick = {
                     probeBusy = true
                     probeStatus = "Listening for one authenticated peer (up to 60 seconds)…"
@@ -402,7 +402,7 @@ internal fun PeerManagementScreen(insets: PaddingValues) {
                     scope.launch {
                         try {
                             val received = withContext(Dispatchers.IO) {
-                                liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761, code)
+                                liveSession.receiveArchive(probePort.toIntOrNull() ?: 42761, code, selectedPeer)
                             }
                             receivedArchive = received
                             probeStatus = "Encrypted archive received privately: " + received.name +
