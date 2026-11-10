@@ -5,6 +5,7 @@ import org.zamcan.zamrescue.identity.AndroidKeystoreIdentityProvider
 import org.zamcan.zamrescue.identity.PeerEnrollmentRepository
 import org.zamcan.zamrescue.protocol.AuthenticatedRescueSocket
 import org.zamcan.zamrescue.protocol.EncryptedBackupTransfer
+import org.zamcan.zamrescue.protocol.RecoveryGrantStore
 import java.security.MessageDigest
 import java.io.File
 import java.io.InputStream
@@ -19,6 +20,7 @@ class LivePeerSession(private val context: Context) : Closeable {
     private val identity = AndroidKeystoreIdentityProvider()
     private val repository = PeerEnrollmentRepository(context, identity)
     @Volatile private var listener: ServerSocket? = null
+    private val grants = RecoveryGrantStore()
 
     /** Blocks on worker thread; closing the session interrupts the accept. */
     fun receiveProbe(port: Int = 42761): String {
@@ -69,6 +71,7 @@ class LivePeerSession(private val context: Context) : Closeable {
         val sender = repository.peers().singleOrNull {
             !it.isRevoked && it.fingerprintHex.equals(senderFingerprint, ignoreCase = true)
         } ?: error("Select an active enrolled sender")
+        val grant = grants.issue(sender.fingerprintHex, RecoveryGrantStore.Operation.RECEIVE_BACKUP, "encrypted-archive", 60_000)
         val keys = listOf(sender.publicKeyEncoded)
         val own = requireNotNull(identity.load()) { "Create an identity first" }
         val server = ServerSocket(port)
@@ -83,7 +86,10 @@ class LivePeerSession(private val context: Context) : Closeable {
                     require(MessageDigest.isEqual(suppliedCode, approvalCode.toByteArray(Charsets.US_ASCII))) {
                         "Receiver approval code mismatch"
                     }
+                    require(repository.peers().any { !it.isRevoked && it.fingerprintHex == sender.fingerprintHex }) { "Peer revoked" }
+                    require(grants.authorize(grant.id, sender.fingerprintHex, RecoveryGrantStore.Operation.RECEIVE_BACKUP, "encrypted-archive")) { "Authorization expired" }
                     session.send("ZAMRESCUE_APPROVED_V1".toByteArray())
+                    require(context.cacheDir.usableSpace > 576L * 1024 * 1024) { "Insufficient storage reserve" }
                     staged.outputStream().use { output ->
                         EncryptedBackupTransfer.receive(session, output)
                     }
@@ -94,6 +100,7 @@ class LivePeerSession(private val context: Context) : Closeable {
         } finally {
             listener = null
             server.close()
+            grants.revoke(grant.id)
             if (!success) staged.delete()
         }
     }
