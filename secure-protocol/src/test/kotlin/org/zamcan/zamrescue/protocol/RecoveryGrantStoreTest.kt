@@ -5,6 +5,7 @@ import org.junit.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.time.Duration
 
 class RecoveryGrantStoreTest {
     private val peer = "a".repeat(64)
@@ -20,11 +21,17 @@ class RecoveryGrantStoreTest {
     }
 
     @Test fun expiredGrantsDenied() {
-        val issue = RecoveryGrantStore(Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC))
-        val grant = issue.issue(peer, RecoveryGrantStore.Operation.VERIFY_BACKUP, "file", 1)
-        val verifier = RecoveryGrantStore(Clock.fixed(Instant.ofEpochMilli(1002), ZoneOffset.UTC))
-        // A grant is never valid in another store/process.
-        assertFalse(verifier.authorize(grant.id, peer, grant.operation, "file"))
+        val base = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
+        val advancing = object : Clock() {
+            var now = 1000L
+            override fun getZone() = ZoneOffset.UTC
+            override fun withZone(zone: java.time.ZoneId): Clock = this
+            override fun instant(): Instant = Instant.ofEpochMilli(now)
+        }
+        val store = RecoveryGrantStore(advancing)
+        val grant = store.issue(peer, RecoveryGrantStore.Operation.VERIFY_BACKUP, "file", 1)
+        advancing.now = 1001L
+        assertFalse(store.authorize(grant.id, peer, grant.operation, "file"))
     }
 
     @Test fun revocationDenies() {
